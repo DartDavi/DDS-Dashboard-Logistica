@@ -12,7 +12,7 @@ st.markdown("""
     div[data-testid="stMetricValue"] {
         font-size: 34px !important;
         font-weight: 700 !important;
-        color: #00B4D8 !important; /* Azul destacado que funciona em ambos os fundos */
+        color: #00B4D8 !important; /* Azul destacado */
     }
     div[data-testid="stMetricLabel"] {
         color: var(--text-color) !important;
@@ -24,7 +24,7 @@ st.markdown("""
         border: 1px solid #3A506B !important;
         box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
     }
-    /* Ajuste fino na tabela para não bugar no modo claro */
+    /* Ajuste fino na tabela */
     div[data-testid="stDataFrame"] {
         padding: 5px !important;
         border-radius: 8px !important;
@@ -89,7 +89,6 @@ st.write("---")
 col_graf1, col_graf2 = st.columns(2)
 paleta_viva = px.colors.qualitative.G10 
 
-# Removido o fundo fixo escuro do Plotly para ele herdar o tema do Streamlit
 layout_adaptativo = {
     'paper_bgcolor': 'rgba(0,0,0,0)',
     'plot_bgcolor': 'rgba(0,0,0,0)',
@@ -119,15 +118,22 @@ with col_graf2:
 
 st.write("---")
 
-# 7. Tabela de Priorização Limpa e Responsiva
+# 7. Tabela de Priorização com Destaque de Fundo nos Atrasados
 st.subheader("Lista Operacional de Prioridade Crítica")
 st.markdown("Pedidos ordenados de forma decrescente pelo volume de desvio do prazo.")
 
 df_ordenado = df_filtrado.sort_values(by='Dias de Atraso', ascending=False)
 
-# Renderização limpa da tabela que aceita perfeitamente light e dark mode nativos
+# Função para aplicar o fundo vermelho claro nas linhas que estão atrasadas
+def destacar_atrasos(row):
+    # Usando um vermelho bem suave (rgba) que não esconde o texto em nenhum dos modos
+    return ['background-color: rgba(230, 57, 70, 0.20);' if row['Atrasado'] else '' for _ in row]
+
+df_estilizado = df_ordenado.style.apply(destacar_atrasos, axis=1)
+
+# Renderização com aplicação de estilo para o fundo vermelho
 st.dataframe(
-    df_ordenado, 
+    df_estilizado, 
     use_container_width=True,
     column_config={
         "id_entrega": "ID da Entrega",
@@ -137,6 +143,6 @@ st.dataframe(
         "dias_reais": "Tempo Real Utilizado",
         "Dias de Atraso": "Total de Dias Excedidos",
         "Status": "Classificação",
-        "Atrasado": None, 
+        "Atrasado": None, # Esconde a coluna booleana pra ficar limpo
     }
 )
