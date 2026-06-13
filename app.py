@@ -2,34 +2,32 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. Configuração de Layout e Tema Personalizado (Azul Meia-Noite)
+# 1. Configuração de Layout e Tema Adaptativo
 st.set_page_config(page_title="Painel Logístico - Monitoramento de SLA", layout="wide", initial_sidebar_state="expanded")
 
-# Injeção de CSS para o fundo azul escuro, os cards e o destaque da tabela
+# CSS Inteligente: Se adapta ao Modo Claro e Escuro automaticamente
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #0B132B;
-    }
+    /* Cards de KPI adaptativos */
     div[data-testid="stMetricValue"] {
         font-size: 34px !important;
         font-weight: 700 !important;
-        color: #48CAE4 !important;
+        color: #00B4D8 !important; /* Azul destacado que funciona em ambos os fundos */
     }
     div[data-testid="stMetricLabel"] {
-        color: #FFFFFF !important;
+        color: var(--text-color) !important;
     }
     div[data-testid="stMetricBackground"] {
-        background-color: #1C2541 !important;
+        background-color: var(--background-color) !important;
         padding: 20px !important;
         border-radius: 8px !important;
         border: 1px solid #3A506B !important;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
     }
+    /* Ajuste fino na tabela para não bugar no modo claro */
     div[data-testid="stDataFrame"] {
-        background-color: #16223F !important;
-        padding: 10px !important;
+        padding: 5px !important;
         border-radius: 8px !important;
-        border: 1px solid #3A506B !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -87,14 +85,14 @@ with kpi3:
 
 st.write("---")
 
-# 6. Configuração de Gráficos com Cores Variadas e Destacadas
+# 6. Configuração de Gráficos Adaptativos
 col_graf1, col_graf2 = st.columns(2)
 paleta_viva = px.colors.qualitative.G10 
 
-layout_escuro = {
+# Removido o fundo fixo escuro do Plotly para ele herdar o tema do Streamlit
+layout_adaptativo = {
     'paper_bgcolor': 'rgba(0,0,0,0)',
     'plot_bgcolor': 'rgba(0,0,0,0)',
-    'font_color': '#FFFFFF',
     'margin': dict(l=10, r=10, t=30, b=10)
 }
 
@@ -106,7 +104,7 @@ with col_graf1:
         labels={'transportadora': 'Transportadora', 'Dias de Atraso': 'Acumulado de Dias'},
         color='transportadora', color_discrete_sequence=paleta_viva
     )
-    fig_bar.update_layout(showlegend=False, **layout_escuro)
+    fig_bar.update_layout(showlegend=False, **layout_adaptativo)
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with col_graf2:
@@ -116,23 +114,20 @@ with col_graf2:
         df_regiao, names='regiao', values='Dias de Atraso', 
         hole=0.4, color_discrete_sequence=paleta_viva
     )
-    fig_pie.update_layout(**layout_escuro)
+    fig_pie.update_layout(**layout_adaptativo)
     st.plotly_chart(fig_pie, use_container_width=True)
 
 st.write("---")
 
-# 7. Tabela de Priorização
+# 7. Tabela de Priorização Limpa e Responsiva
 st.subheader("Lista Operacional de Prioridade Crítica")
 st.markdown("Pedidos ordenados de forma decrescente pelo volume de desvio do prazo.")
 
 df_ordenado = df_filtrado.sort_values(by='Dias de Atraso', ascending=False)
 
-def destacar_linhas_criticas(row):
-    bg_color = 'background-color: #251620;' if row['Atrasado'] else 'background-color: #16223F;'
-    return [bg_color for _ in row]
-
+# Renderização limpa da tabela que aceita perfeitamente light e dark mode nativos
 st.dataframe(
-    df_ordenado.style.apply(destacar_linhas_criticas, axis=1), 
+    df_ordenado, 
     use_container_width=True,
     column_config={
         "id_entrega": "ID da Entrega",
